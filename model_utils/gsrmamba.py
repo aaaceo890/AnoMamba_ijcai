@@ -19,10 +19,10 @@ class RMSNorm(nn.Module):
 
         return output
 
-class SRM(nn.Module):
+class GSR(nn.Module):
     def __init__(self, input_dim, seq_len, hidden_dim=8, num_layers=2):
         """
-        Step-size Reweighting Module (SRM)
+        Global Step-size Reweighting (GSR) Model
         """
         super().__init__()
         self.seq_len = seq_len
@@ -53,12 +53,8 @@ class SRM(nn.Module):
         if beta.ndim == 1:
             beta = beta.unsqueeze(0)
         B, _ = alpha.shape
-        # TODO: alpha
-        # eps = alpha
-        peak_x = (alpha - 1) * beta
-        eps = peak_x * (0.5 ** (1 / alpha))
+        eps = alpha
         x = torch.arange(seq_len, device=device).float().unsqueeze(0) # 1, T
-        # unnorm = (x + eps) ** alpha * torch.exp(-x / beta) # [B, T]
         unnorm = torch.exp(alpha * torch.log(x + eps) - x / beta)
         prior = unnorm / unnorm.sum(-1, keepdim=True)  # normalize to sum 1
         return prior  # shape: [B, T]
@@ -72,9 +68,7 @@ class SRM(nn.Module):
             x = x.transpose(1, 2)  # back to [B, T, D]
 
         # random prior distribution
-        # TODO: alpha
-        # rand_T = torch.rand(1).to(x) * (T-1) + 1
-        rand_T = torch.rand(1).to(x) * 18 + 2
+        rand_T = torch.rand(1).to(x) * (T-1) + 1
         alpha = x.new_ones(B, 1) * rand_T
         prior = self.gamma_like_prior(x.shape[1], alpha=alpha, beta=torch.ones_like(alpha), device=x.device)
         if torch.any(torch.isnan(prior)):
@@ -84,12 +78,12 @@ class SRM(nn.Module):
         weight = torch.sigmoid(logits)  # [B, T]
         return weight, prior
 
-class GSMamba(nn.Module):
+class GSRMamba(nn.Module):
     def __init__(self, d_model, seq_len, d_state=16, expand=2, dt_rank='auto',
                  d_conv=4, conv_bias=True, bias=False, lambda_kl=0.1,
                  ):
         """
-        Global Selective Mamba (GSMamba)
+        Global Step-size Reweighted Mamba (GSRMamba)
         """
         super().__init__()
         self.d_model = d_model
@@ -106,7 +100,7 @@ class GSMamba(nn.Module):
         else:
             self.dt_rank = dt_rank
 
-        self.srm = SRM(
+        self.gsr = GSR(
             d_model * expand, seq_len,
             hidden_dim=d_state,
             num_layers=2
@@ -167,7 +161,7 @@ class GSMamba(nn.Module):
         x = rearrange(x, 'b d_in l -> b l d_in')
         x = F.silu(x)
 
-        # The process of SR-S6
+        # The process of GSR guided S6
         y, ssm_state, kl_loss, args = self.ssm(x, res, return_att_args=return_att_args)
 
         output = self.out_proj(y)
@@ -189,7 +183,7 @@ class GSMamba(nn.Module):
 
     def ssm(self, x, res, return_att_args=False):
         """
-        SR-S6
+        GSR guided S6
         """
         (d_in, n) = self.A_log.shape
 
@@ -202,12 +196,12 @@ class GSMamba(nn.Module):
                                     dim=-1)  # delta: (b, l, dt_rank). B, C: (b, l, n)
         delta = F.softplus(self.dt_proj(delta))
 
-        # Step-size Reweighting Module (SRM)
-        weight, prior = self.srm(x)
+        # Global Step-size Reweighting (GSR) model
+        weight, prior = self.gsr(x)
         kl_loss = self.kl_loss(weight, prior)
         delta = delta * weight.unsqueeze(-1)
 
-        # SSM process in SR-S6
+        # SSM process in GSR guided S6
         y, ssm_state = selective_scan_fn(
             x.transpose(-1, -2),
             delta.transpose(-1, -2),

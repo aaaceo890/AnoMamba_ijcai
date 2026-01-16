@@ -3,7 +3,7 @@ import torch.nn as nn
 from tqdm import tqdm
 import numpy as np
 
-from model_utils.gsmamba import GSMamba
+from model_utils.gsrmamba import GSRMamba
 
 class RevIN(nn.Module):
     def __init__(self, num_features: int, eps=1e-5, affine=True, subtract_last=False):
@@ -121,7 +121,7 @@ class AnoMamba(nn.Module):
         num_patches = (self.window_size + pad_len - self.patch_size) // self.patch_stride + 1
 
         self.blocks = nn.ModuleList([
-            GSMamba(
+            GSRMamba(
                 d_model,
                 num_patches,
                 d_state=state_size,
@@ -163,7 +163,7 @@ class AnoMamba(nn.Module):
         x = self.embedding(x.permute(0, 3, 1, 2).reshape(B*D, N, P))
         Dm = x.shape[-1]
 
-        # Step 2. Global Selective Mamba
+        # Step 2. Global Step-size Reweighted Mamba
         kl_losses = []
         all_args = []
         x_s = x
