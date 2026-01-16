@@ -11,8 +11,6 @@ for data in ${datasets}; do
   nohup python3 main.py \
   --dataset ${data} \
   --tag ${tag} \
-  --test \
-  --save_value \
   --seed 42 123 2025 3407 7777 \
    > ${data}_${tag}_run.log 2>&1 &
 done
