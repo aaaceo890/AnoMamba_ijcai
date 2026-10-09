@@ -39,6 +39,27 @@ $$\mathcal{L} = \mathcal{L}_{\mathrm{rec}} + \lambda \mathcal{L}_{\mathrm{KL}}.$
 
 During inference, reconstruction error is used as the anomaly score. The model also provides interpretability through its hidden attention map, which reveals the historical information contributing to reconstruction.
 
+# Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/aaaceo890/AnoMamba_ijcai.git
+cd AnoMamba_ijcai
+```
+
+Install a CUDA-enabled PyTorch build by following the
+[official PyTorch instructions](https://pytorch.org/get-started/locally/).
+
+Install Mamba by following the
+[official Mamba installation instructions](https://github.com/state-spaces/mamba#installation).
+Choose an installation compatible with your PyTorch and CUDA environment.
+
+Then install the remaining dependencies:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Dataset Preparation
 
