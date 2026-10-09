@@ -39,7 +39,7 @@ $$\mathcal{L} = \mathcal{L}_{\mathrm{rec}} + \lambda \mathcal{L}_{\mathrm{KL}}.$
 
 During inference, reconstruction error is used as the anomaly score. The model also provides interpretability through its hidden attention map, which reveals the historical information contributing to reconstruction.
 
-# Installation
+## Installation
 
 Clone the repository:
 
