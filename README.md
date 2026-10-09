@@ -7,6 +7,10 @@ This repository provides the official implementation of AnoMamba, published at I
 
 ## Motivation
 
+<p align="center">
+  <img src="./figs/motivation.png" alt="Motivation" width="600">
+</p>
+
 Reconstruction-based anomaly detection assumes that a model reconstructs normal behavior accurately while producing larger errors on anomalies. However, minimizing reconstruction loss alone does not always support this assumption.
 
 Two challenges motivate AnoMamba:
@@ -19,6 +23,8 @@ Mamba's input-dependent step size provides a mechanism for balancing historical 
 
 ## Method Overview
 
+![AnoMamba Framework](./figs/method.png)
+
 AnoMamba consists of three main components:
 
 * **Patch embedding** processes each channel independently and summarizes local patterns within patches, reducing local dependency redundancy.
@@ -29,9 +35,7 @@ GSRMamba is guided by **multi-scale long-tail priors**. These priors regularize 
 
 The training objective combines reconstruction loss with prior regularization:
 
-$$
-\mathcal{L} = \mathcal{L}_{\mathrm{rec}} + \lambda \mathcal{L}_{\mathrm{KL}}.
-$$
+$$\mathcal{L} = \mathcal{L}_{\mathrm{rec}} + \lambda \mathcal{L}_{\mathrm{KL}}.$$
 
 During inference, reconstruction error is used as the anomaly score. The model also provides interpretability through its hidden attention map, which reveals the historical information contributing to reconstruction.
 
