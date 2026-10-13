@@ -130,7 +130,7 @@ if __name__ == '__main__':
                     val_split = train_data[-window_length:]
             else:
                 train_split = train_data[:L]
-                val_split = train_data[-period * 5:]
+                val_split = train_data[-max(window_length, period * 5):]
 
             train_dataset = RecDataset(train_split, label=np.zeros_like(train_split), dtype=np.float32,
                                        partition=True, shuffle=False, window_length=window_length,
